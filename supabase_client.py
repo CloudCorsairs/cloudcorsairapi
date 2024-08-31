@@ -1,16 +1,12 @@
-from supabase import create_client, Client
-
-SUPABASE_URL = "https://nsoghqqtwvbssfeqjrtf.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2docXF0d3Zic3NmZXFqcnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUwMzUxNDAsImV4cCI6MjA0MDYxMTE0MH0.POytBQ0lSHpaWY0QMB8aPBPWGf9o0Ao7bjiyITteav0"
-
 import base64
 import io
 from PIL import Image
 from supabase import create_client, Client
 
 # Initialize Supabase client
-url = SUPABASE_URL
-api_key = SUPABASE_KEY
+SUPABASE_URL = "https://nsoghqqtwvbssfeqjrtf.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2docXF0d3Zic3NmZXFqcnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUwMzUxNDAsImV4cCI6MjA0MDYxMTE0MH0.POytBQ0lSHpaWY0QMB8aPBPWGf9o0Ao7bjiyITteav0"
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
@@ -26,12 +22,15 @@ def upload_image_to_supabase(image, image_name):
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     buffer.seek(0)
-    response = supabase.storage().from_("claims").upload(image_name, buffer)
 
-    if response.status_code == 200:
-        return f"{url}/storage/v1/object/CloudCorsairs/claims/ai_uploads/{image_name}"
+    # Access the 'storage' object directly and call 'from_' method on it
+    storage_client = supabase.storage()
+    response = storage_client.from_("claims").upload(f"ai_uploads/{image_name}", buffer)
+
+    if response.get('Key'):
+        return f"{SUPABASE_URL}/storage/v1/object/public/claims/ai_uploads/{image_name}"
     else:
-        print("Failed to upload image:", response.json())
+        print("Failed to upload image:", response)
         return None
 
 
