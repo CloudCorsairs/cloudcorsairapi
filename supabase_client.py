@@ -23,14 +23,15 @@ def upload_image_to_supabase(image, image_name):
     image.save(buffer, format="PNG")
     buffer.seek(0)
 
-    # Access the 'storage' object directly and call 'from_' method on it
-    storage_client = supabase.storage()
-    response = storage_client.from_("claims").upload(f"ai_uploads/{image_name}", buffer)
+    # Access the Supabase storage bucket
+    bucket = "claims"  # Adjust to your bucket name
+    response = supabase.storage().from_(bucket).upload(f"ai_uploads/{image_name}", buffer)
 
-    if response.get('Key'):
-        return f"{SUPABASE_URL}/storage/v1/object/public/claims/ai_uploads/{image_name}"
+    if response['status_code'] == 200:
+        # Construct the public URL for the uploaded file
+        return f"{SUPABASE_URL}/storage/v1/object/public/{bucket}/ai_uploads/{image_name}"
     else:
-        print("Failed to upload image:", response)
+        print("Failed to upload image:", response['data'])
         return None
 
 
@@ -51,8 +52,8 @@ def update_image_url(old_url, base64_string):
         # Find the record ID based on the old image URL
         response = supabase.table(table_name).select("id").eq("image_url", old_url).execute()
 
-        if response.status_code == 200:
-            data = response.data
+        if response['status_code'] == 200:
+            data = response['data']
             if data and len(data) > 0:
                 record_id = data[0]['id']
 
@@ -60,11 +61,12 @@ def update_image_url(old_url, base64_string):
                 update_response = supabase.table(table_name).update({"image_url": new_url}).eq("id",
                                                                                                record_id).execute()
 
-                if update_response.status_code == 200:
+                if update_response['status_code'] == 200:
                     print("Record updated successfully with new URL.")
                 else:
-                    print("Failed to update the record:", update_response.json())
+                    print("Failed to update the record:", update_response['data'])
             else:
                 print("No record found with the given old URL.")
         else:
-            print("Query failed:", response.json())
+            print("Query failed:", response['data'])
+
