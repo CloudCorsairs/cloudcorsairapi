@@ -5,7 +5,7 @@ from supabase import create_client, Client
 
 # Initialize Supabase client
 SUPABASE_URL = "https://nsoghqqtwvbssfeqjrtf.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2docXF0d3Zic3NmZXFqcnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUwMzUxNDAsImV4cCI6MjA0MDYxMTE0MH0.POytBQ0lSHpaWY0QMB8aPBPWGf9o0Ao7bjiyITteav0"
+SUPABASE_KEY = "your_supabase_key_here"  # Replace with your actual Supabase key
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -24,14 +24,18 @@ def upload_image_to_supabase(image, image_name):
     buffer.seek(0)
 
     # Access the Supabase storage bucket
-    bucket = "claims"  # Adjust to your bucket name
-    response = supabase.storage().from_(bucket).upload(f"ai_uploads/{image_name}", buffer)
+    bucket_name = "claims"  # Adjust to your bucket name
+    storage = supabase.storage().from_(bucket_name)
 
-    if response['status_code'] == 200:
+    # Upload the image
+    response = storage.upload(f"ai_uploads/{image_name}", buffer, content_type="image/png")
+
+    # Check response status
+    if response.status_code == 200:
         # Construct the public URL for the uploaded file
-        return f"{SUPABASE_URL}/storage/v1/object/public/{bucket}/ai_uploads/{image_name}"
+        return f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/ai_uploads/{image_name}"
     else:
-        print("Failed to upload image:", response['data'])
+        print("Failed to upload image:", response.json())
         return None
 
 
@@ -52,8 +56,8 @@ def update_image_url(old_url, base64_string):
         # Find the record ID based on the old image URL
         response = supabase.table(table_name).select("id").eq("image_url", old_url).execute()
 
-        if response['status_code'] == 200:
-            data = response['data']
+        if response.status_code == 200:
+            data = response.json()
             if data and len(data) > 0:
                 record_id = data[0]['id']
 
@@ -61,12 +65,11 @@ def update_image_url(old_url, base64_string):
                 update_response = supabase.table(table_name).update({"image_url": new_url}).eq("id",
                                                                                                record_id).execute()
 
-                if update_response['status_code'] == 200:
+                if update_response.status_code == 200:
                     print("Record updated successfully with new URL.")
                 else:
-                    print("Failed to update the record:", update_response['data'])
+                    print("Failed to update the record:", update_response.json())
             else:
                 print("No record found with the given old URL.")
         else:
-            print("Query failed:", response['data'])
-
+            print("Query failed:", response.json())
