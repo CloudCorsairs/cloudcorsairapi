@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 import base64
 from pathlib import Path
 from supabase_client import supabase
@@ -11,8 +11,8 @@ class ImageRequest(BaseModel):
     baseStr: str
     userId: str
 
-model_path = "path/to/damage/model"  # Replace with your actual model path
-parts_model = "path/to/parts/model"  # Replace with your actual parts model path
+model_path = "v8.15.pt"  # Replace with your actual model path
+parts_model = "Partv820.pt"  # Replace with your actual parts model path
 damage_detector = DamageDetector(model_path, parts_model)
 
 @app.get("/get")
@@ -32,7 +32,8 @@ async def get_image_base64(image_path: str):
     return {"image_path": image_path, "base64": encoded_string}
 
 @app.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...), user_id: str = Query(...), part: str = Query(...)):
+
     # Read the file content
     content = await file.read()
     
@@ -41,7 +42,7 @@ async def upload_image(file: UploadFile = File(...)):
     
     # Save the image to Supabase
     try:
-        response = supabase.table("images").insert({"filename": file.filename, "base64": encoded_string}).execute()
+        response = supabase.table("images").insert({"filename": file.filename, "base64": encoded_string , "userId" : user_id , part :part}).execute()
         if response.status_code == 201:
             return {"filename": file.filename, "base64": encoded_string, "message": "Image successfully uploaded to Supabase."}
         else:
@@ -70,6 +71,14 @@ async def fetch_image_from_supabase(filename: str):
 async def sentinel_corsair(request: ImageRequest):
     try:
         result = damage_detector.predict_and_draw(request.baseStr)
+
+        if result is None:
+            raise HTTPException(status_code=400, detail="No damage detected in the image.")
+
+        image_base64 = result.get('image')
+        parts_detections = result.get('parts_detections')
+
+        await upload_image(damage_detector.base64_to_image(image_base64),request.userId,parts_detections)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
