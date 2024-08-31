@@ -2,8 +2,18 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 import base64
 from pathlib import Path
 from supabase_client import supabase
+from SentialCorsair import DamageDetector
+from pydantic import BaseModel
 
 app = FastAPI()
+
+class ImageRequest(BaseModel):
+    baseStr: str
+    userId: str
+
+model_path = "path/to/damage/model"  # Replace with your actual model path
+parts_model = "path/to/parts/model"  # Replace with your actual parts model path
+damage_detector = DamageDetector(model_path, parts_model)
 
 @app.get("/get")
 async def get_image_base64(image_path: str):
@@ -54,3 +64,12 @@ async def fetch_image_from_supabase(filename: str):
             raise HTTPException(status_code=404, detail="Image not found in Supabase.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching image from Supabase: {str(e)}")
+
+
+@app.post("/sentinel-corsair")
+async def sentinel_corsair(request: ImageRequest):
+    try:
+        result = damage_detector.predict_and_draw(request.baseStr)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
