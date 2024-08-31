@@ -1,9 +1,11 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 import base64
+import requests
 from pathlib import Path
 from supabase_client import supabase
 from SentialCorsair import DamageDetector
 from pydantic import BaseModel
+from io import BytesIO
 
 app = FastAPI()
 
@@ -70,7 +72,16 @@ async def fetch_image_from_supabase(filename: str):
 @app.post("/sentinel-corsair")
 async def sentinel_corsair(request: ImageRequest):
     try:
-        result = damage_detector.predict_and_draw(request.baseStr)
+        response = requests.get(request.baseStr)
+        if response.status_code == 200:
+            # Step 2: Convert the image to base64
+            image_data = response.content
+            base64_encoded = base64.b64encode(image_data).decode('utf-8')
+
+        else:
+            raise Exception(f"Failed to fetch image. Status code: {response.status_code}")
+
+        result = damage_detector.predict_and_draw(base64_encoded)
 
         if result is None:
             raise HTTPException(status_code=400, detail="No damage detected in the image.")
@@ -78,7 +89,8 @@ async def sentinel_corsair(request: ImageRequest):
         image_base64 = result.get('image')
         parts_detections = result.get('parts_detections')
 
-        await upload_image(damage_detector.base64_to_image(image_base64),request.userId,parts_detections)
-        return result
+        item = await upload_image(damage_detector.base64_to_image(image_base64),request.userId,parts_detections)
+        print(item)
+        return item
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
