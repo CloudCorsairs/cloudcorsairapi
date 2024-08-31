@@ -26,10 +26,10 @@ def upload_image_to_supabase(image, image_name):
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     buffer.seek(0)
-    response = supabase.storage().from_("your_bucket_name").upload(image_name, buffer)
+    response = supabase.storage().from_("claims").upload(image_name, buffer)
 
     if response.status_code == 200:
-        return f"{url}/storage/v1/object/public/your_bucket_name/{image_name}"
+        return f"{url}/storage/v1/object/CloudCorsairs/claims/ai_uploads/{image_name}"
     else:
         print("Failed to upload image:", response.json())
         return None
