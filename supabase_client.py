@@ -17,6 +17,13 @@ def base64_to_image(base64_string):
     return image
 
 
+
+def base64_to_image(base64_string):
+    """Convert base64 string to image."""
+    image_data = base64.b64decode(base64_string)
+    image = Image.open(io.BytesIO(image_data))
+    return image
+
 def upload_image_to_supabase(image, image_name):
     """Upload image to Supabase storage and return the URL."""
     buffer = io.BytesIO()
@@ -28,14 +35,14 @@ def upload_image_to_supabase(image, image_name):
     storage = supabase.storage().from_(bucket_name)
 
     # Upload the image
-    key = storage.upload(f"ai_uploads/{image_name}", buffer, content_type="image/png")
+    response = storage.upload(f"ai_uploads/{image_name}", buffer, content_type="image/png")
 
-    # Check if the key is returned and construct the URL
-    if key:
-        return key
-
+    # Check response and return the URL if successful
+    if response.status_code == 200:
+        # Construct the public URL for the uploaded file
+        return f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/ai_uploads/{image_name}"
     else:
-        print("Failed to upload image.")
+        print("Failed to upload image:", response.json())
         return None
 
 def update_image_url(old_url, base64_string):
@@ -61,8 +68,7 @@ def update_image_url(old_url, base64_string):
                 record_id = data[0]['id']
 
                 # Update the record with the new image URL
-                update_response = supabase.table(table_name).update({"image_url": new_url}).eq("id",
-                                                                                               record_id).execute()
+                update_response = supabase.table(table_name).update({"image_url": new_url}).eq("id", record_id).execute()
 
                 if update_response.status_code == 200:
                     print("Record updated successfully with new URL.")
