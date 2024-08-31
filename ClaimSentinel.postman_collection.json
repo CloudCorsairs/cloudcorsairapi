@@ -1,0 +1,89 @@
+{
+	"info": {
+		"_postman_id": "79f83206-e609-42d0-8d75-69460ffc2de2",
+		"name": "ClaimSentinel",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "32359123",
+		"_collection_link": "https://zapper-8751.postman.co/workspace/Zapper-Workspace~4eae0a6a-15e3-4488-86f4-8a3d9d0b13f6/collection/32359123-79f83206-e609-42d0-8d75-69460ffc2de2?action=share&source=collection_link&creator=32359123"
+	},
+	"item": [
+		{
+			"name": "Get Image",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{appUrl}}/get?image_path=TestImage1.jpg",
+					"host": [
+						"{{appUrl}}"
+					],
+					"path": [
+						"get"
+					],
+					"query": [
+						{
+							"key": "image_path",
+							"value": "TestImage1.jpg"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload Image",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/ClaimSentinel/API/TestImage1.jpg"
+						}
+					]
+				},
+				"url": "{{appUrl}}/upload"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "appUrl",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		}
+	]
+}
