@@ -5,7 +5,7 @@ from supabase import create_client, Client
 
 # Initialize Supabase client
 SUPABASE_URL = "https://nsoghqqtwvbssfeqjrtf.supabase.co"
-SUPABASE_KEY = "your_supabase_key_here"  # Replace with your actual Supabase key
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zb2docXF0d3Zic3NmZXFqcnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUwMzUxNDAsImV4cCI6MjA0MDYxMTE0MH0.POytBQ0lSHpaWY0QMB8aPBPWGf9o0Ao7bjiyITteav0"  # Replace with your actual Supabase key
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
