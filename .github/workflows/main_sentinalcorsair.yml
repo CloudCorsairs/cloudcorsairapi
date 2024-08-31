@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - sentinalcorsair
+name: Build and deploy FastAPI app to Azure Web App - sentinalcorsair
 
 on:
   push:
@@ -26,22 +26,20 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
-      
+
       - name: Install dependencies
-        run: pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+        run: |
+          pip install -r requirements.txt
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          zip -r release.zip . -x "venv/*" -x ".git/*"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,7 +48,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -59,15 +57,14 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: unzip release.zip -d /home/runner/work/deploy
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_749F1AD6CAC34186A8887FE783C10BAE }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A130D037F4C040DD8ED4232B12B21CBE }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5D219E16B902494A86E4625D0D6C6BE5 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -75,4 +72,4 @@ jobs:
         with:
           app-name: 'sentinalcorsair'
           slot-name: 'Production'
-          
+          package: '/home/runner/work/deploy'
