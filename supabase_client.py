@@ -37,7 +37,7 @@ def upload_image_to_supabase(image, image_name):
 
 def update_image_url(old_url, base64_string):
     """Find the record by old URL, convert base64 to image, upload it, and update the record with the new URL."""
-    table_name = "your_table_name"
+    table_name = "claims"
 
     # Convert base64 to image
     image = base64_to_image(base64_string)
