@@ -1,29 +1,39 @@
-FROM python:3.9
+# Stage 1: Build dependencies
+FROM python:3.9 AS build
 
-# Install system dependencies required by OpenCV
-RUN apt-get update && \
-    apt-get install -y \
+# Set up a working directory
+WORKDIR  /app
+
+# Install system dependencies for OpenCV and other packages
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgthread-2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
-WORKDIR /app
+# Copy requirements file and install dependencies
+COPY requirements.txt /requirements.txt
+RUN pip install --no-cache-dir -r /code/requirements.txt
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+# Stage 2: Create final image
+FROM python:3.9
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Set up a working directory
+WORKDIR  /app
 
-# Copy the rest of the application code into the container
-COPY . .
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Expose the port on which the FastAPI application will run
-EXPOSE 8000
+# Copy installed dependencies from the build stage
+COPY --from=build /usr/local /usr/local
 
-# Command to run the FastAPI app with Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Copy application code into the container
+COPY . /app
+
+# Expose port 80
+EXPOSE 80
+
+# Run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

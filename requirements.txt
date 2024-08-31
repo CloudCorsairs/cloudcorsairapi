@@ -5,4 +5,3 @@ opencv-python==4.10.0.82
 numpy
 Pillow
 ultralytics
-supabase

@@ -1,13 +1,10 @@
 import json
-
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 import base64
 import requests
-from pathlib import Path
-import supabase_client
 from SentialCorsair import DamageDetector
 from pydantic import BaseModel
-from io import BytesIO
+
 
 app = FastAPI()
 
