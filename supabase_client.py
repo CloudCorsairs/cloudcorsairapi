@@ -28,16 +28,15 @@ def upload_image_to_supabase(image, image_name):
     storage = supabase.storage().from_(bucket_name)
 
     # Upload the image
-    response = storage.upload(f"ai_uploads/{image_name}", buffer, content_type="image/png")
+    key = storage.upload(f"ai_uploads/{image_name}", buffer, content_type="image/png")
 
-    # Check response status
-    if response.status_code == 200:
-        # Construct the public URL for the uploaded file
-        return response
+    # Check if the key is returned and construct the URL
+    if key:
+        return key
+
     else:
-        print("Failed to upload image:", response.json())
+        print("Failed to upload image.")
         return None
-
 
 def update_image_url(old_url, base64_string):
     """Find the record by old URL, convert base64 to image, upload it, and update the record with the new URL."""
