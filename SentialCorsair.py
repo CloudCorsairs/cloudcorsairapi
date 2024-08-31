@@ -50,6 +50,7 @@ class DamageDetector:
         return base64_str
 
     def predict_and_draw(self, base64_str):
+
         image = self.base64_to_image(base64_str)
 
         # Run the models on the input image

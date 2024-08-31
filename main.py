@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 import base64
 import requests
 from pathlib import Path
-from supabase_client import supabase
+import supabase_client
 from SentialCorsair import DamageDetector
 from pydantic import BaseModel
 from io import BytesIO
@@ -10,8 +10,8 @@ from io import BytesIO
 app = FastAPI()
 
 class ImageRequest(BaseModel):
-    baseStr: str
-    userId: str
+    url: str
+
 
 model_path = "v8.15.pt"  # Replace with your actual model path
 parts_model = "Partv820.pt"  # Replace with your actual parts model path
@@ -33,25 +33,6 @@ async def get_image_base64(image_path: str):
     
     return {"image_path": image_path, "base64": encoded_string}
 
-@app.post("/upload")
-async def upload_image(file: UploadFile = File(...), user_id: str = Query(...), part: str = Query(...)):
-
-    # Read the file content
-    content = await file.read()
-    
-    # Convert the binary data to base64 encoded string
-    encoded_string = base64.b64encode(content).decode('utf-8')
-    
-    # Save the image to Supabase
-    try:
-        response = supabase.table("images").insert({"filename": file.filename, "base64": encoded_string , "userId" : user_id , part :part}).execute()
-        if response.status_code == 201:
-            return {"filename": file.filename, "base64": encoded_string, "message": "Image successfully uploaded to Supabase."}
-        else:
-            raise HTTPException(status_code=500, detail="Failed to upload image to Supabase.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error uploading image to Supabase: {str(e)}")
-
 @app.get("/fetch-image")
 async def fetch_image_from_supabase(filename: str):
     # Fetch the image from Supabase
@@ -72,9 +53,9 @@ async def fetch_image_from_supabase(filename: str):
 @app.post("/sentinel-corsair")
 async def sentinel_corsair(request: ImageRequest):
     try:
-        response = requests.get(request.baseStr)
+        response = requests.get(request.url)
         if response.status_code == 200:
-            # Step 2: Convert the image to base64
+
             image_data = response.content
             base64_encoded = base64.b64encode(image_data).decode('utf-8')
 
@@ -89,7 +70,7 @@ async def sentinel_corsair(request: ImageRequest):
         image_base64 = result.get('image')
         parts_detections = result.get('parts_detections')
 
-        item = await upload_image(damage_detector.base64_to_image(image_base64),request.userId,parts_detections)
+        item = supabase_client.update_image_url(request.url,image_base64)
         print(item)
         return item
     except Exception as e:
