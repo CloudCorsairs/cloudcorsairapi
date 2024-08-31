@@ -1,3 +1,5 @@
+import json
+
 from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 import base64
 import requests
@@ -37,8 +39,14 @@ async def sentinel_corsair(request: ImageRequest):
         image_base64 = result.get('image')
         parts_detections = result.get('parts_detections')
 
-        item = supabase_client.update_image_url(request.url,image_base64)
-        print(item)
-        return item
+        response_data = {
+            "image_base64": image_base64,
+            "parts": parts_detections
+        }
+
+        # Convert the dictionary to a JSON string
+        json_response = json.dumps(response_data)
+
+        return json_response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
