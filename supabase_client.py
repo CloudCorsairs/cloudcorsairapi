@@ -33,7 +33,7 @@ def upload_image_to_supabase(image, image_name):
     # Check response status
     if response.status_code == 200:
         # Construct the public URL for the uploaded file
-        return f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/ai_uploads/{image_name}"
+        return response
     else:
         print("Failed to upload image:", response.json())
         return None

@@ -37,7 +37,7 @@ async def sentinel_corsair(request: ImageRequest):
         image_base64 = result.get('image')
         parts_detections = result.get('parts_detections')
 
-        item = supabase_client.update_image_url(request.url,image_base64)
+        item = supabase_client.upload_image_to_supabase(request.url,image_base64)
         print(item)
         return item
     except Exception as e:
